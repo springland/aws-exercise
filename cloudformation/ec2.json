@@ -1,0 +1,123 @@
+
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Parameters": {
+        "KeyName": {
+          "Description": "The EC2 Key Pair to allow SSH access to the instance",
+          "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "UserName": {
+            "Default": "admin",
+            "NoEcho": "False",
+            "Description" : "The user name",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "16",
+            "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*"
+          },
+
+          "InstanceType" : {
+            "Description" : "WebServer EC2 instance type",
+            "Type" : "String",
+            "Default" : "t2.micro",
+            "AllowedValues" : [ 
+              "t1.micro", 
+              "t2.nano", 
+              "t2.micro", 
+              "t2.small", 
+              "t2.medium", 
+              "t2.large" 
+            ],
+            "ConstraintDescription" : "must be a valid EC2 instance type."
+          }          
+      },
+
+      "Mappings": {
+        "RegionMap": {
+          "us-east-1": {
+            "AMI": "ami-02e136e904f3da870"
+          },
+          "us-east-2": {
+            "AMI": "ami-074cce78125f09d61"
+          },
+
+          "us-west-1": {
+            "AMI": "ami-03ab7423a204da002"
+          },
+          "us-west-2": {
+            "AMI": "ami-013a129d325529d4d"
+          }
+        }
+      },
+    "Resources":{
+        "Samplecloudformationec2":
+        {
+            "Type":"AWS::EC2::Instance",
+            "Properties":
+            {
+                "Tags" :[ 
+                    {"Key":"Name",
+                    "Value" : "MycfnEC2Instance"}
+                ]   ,
+
+                "KeyName":{
+                    "Ref" : "KeyName"
+                },
+                "ImageId": {
+                    "Fn::FindInMap":[
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        }
+                        ,
+                        "AMI"
+                    
+                    ]
+                },
+                "InstanceType"   : { "Ref" : "InstanceType" },
+                "SecurityGroups":[
+                    {
+                    "Ref": "InstanceSecurityGroup"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": "80"
+                }
+            }
+
+        },
+        "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+              "GroupDescription": "Enable SSH access via port 22",
+              "SecurityGroupIngress": [
+                {
+                  "IpProtocol": "tcp",
+                  "FromPort": 22,
+                  "ToPort": 22,
+                  "CidrIp": "0.0.0.0/0"
+                }
+              ]
+            }
+        }
+    },
+
+    "Outputs":{
+
+            "MyInstanceId":{
+                "Value" : { "Ref" : "Samplecloudformationec2" }
+            },
+
+            "PublicIP":
+            {
+                "Value": {
+                     "Fn::GetAtt" : [ "Samplecloudformationec2", "PublicIp" ] 
+                }
+            }
+
+
+    }
+
+
+}
