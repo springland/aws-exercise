@@ -30,7 +30,18 @@
               "t2.large" 
             ],
             "ConstraintDescription" : "must be a valid EC2 instance type."
+          },
+          
+          "EnvType" : {
+            "Description" : "The environment to deploy this cloudformation",
+            "Type" : "String",
+            "Default" : "dev",
+            "AllowedValues" : [ 
+              "dev", 
+              "prod" 
+            ]
           }          
+
       },
 
       "Mappings": {
@@ -72,7 +83,7 @@
                         }
                         ,
                         "AMI"
-                    
+                        
                     ]
                 },
                 "InstanceType"   : { "Ref" : "InstanceType" },
@@ -100,7 +111,39 @@
                 }
               ]
             }
+        },
+
+        "DevS3Bucket20211030":
+        {
+          "Type" : "AWS::S3::Bucket",
+          "Condition": "IsDevEnv"
+
+        } ,
+
+        "ProdS3Bucket20211030" :
+        {
+          "Type" : "AWS::S3::Bucket",
+          "Condition": "IsProdEnv"
         }
+    },
+
+    "Conditions":
+    {
+        "IsProdEnv":{
+          "Fn::Equals" : [
+            {"Ref": "EnvType"},
+            "prod"
+          ]
+        },
+
+        "IsDevEnv":{
+          "Fn::Equals" : [
+            {"Ref": "EnvType"},
+            "dev"
+          ]
+
+        }
+
     },
 
     "Outputs":{
